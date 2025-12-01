@@ -13,5 +13,7 @@ DTI & DKI maps will be computed for (i,ii,ii). The higher quality ones will be (
 
 SMI maps will be computed using the full protocol. Note this is a white matter (WM) model so focus on WM regions of interest only.
 
+=====================
+
 Running designer:
 - try the bash script 'dwi_processing_example.sh' which contains how to call designer2 and tmi using docker. Note we are using designer2:v2.0.15
