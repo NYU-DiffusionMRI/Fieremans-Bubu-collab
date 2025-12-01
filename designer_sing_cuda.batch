@@ -1,0 +1,71 @@
+#!/usr/bin/bash
+#SBATCH --job-name=designer
+#SBATCH -p gpu4_medium
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=64GB
+#SBATCH --nodes=2
+#SBATCH --time=10:00:00
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=<your email>@nyulangone.org
+#SBATCH --output=/path/to/where/you/want/to/save/your/log/log_%j.log
+
+# srun --nodes=1 --ntasks=1 --cpus-per-task=2 --mem=4Gb --gres=gpu:a100:4 --time 3:00:00 --pty bash
+
+cd ~
+tag=v2.0.15
+module purge
+module load singularity/3.9.8
+module load cuda/11.8
+singularity pull docker://nyudiffusionmri/designer2:${tag}
+
+kid=your_kid
+root=/gpfs/path/to/your/data # Data
+
+# import txt file with subj IDs
+subj_txt=$1  
+declare -a subjs=($(cat $subj_txt | tr '\n' ' '))
+
+echo $subjs
+#for each subject
+for s in ${subjs[@]}; do 
+    data_dir=$root/$s
+
+    #datapath: you can edit this to match your data
+    dwi1_path=(`ls -d $data_dir/dwi1.nii`)
+    dwi2_path=(`ls -d $data_dir/dwi2.nii`)
+    rpe_path=(`ls -d $data_dir/pa.nii`)
+    rpe=(`basename -a $rpe_path`)
+    dwi1=(`basename -a $dwi1_path`)
+    dwi2=(`basename -a $dwi2_path`)
+
+    echo "dwi1_path: $dwi1_path"
+    echo "dwi2_path: $dwi2_path"
+    echo "rpe_path: $rpe_path"
+
+    #check if the data already has maps
+    if [[ ! -e "$(ls -d $data_dir/params/f_smi.nii)" ]]; then
+        cd ~
+        rm -rf $data_dir/processing
+
+        #run designer preprocessing
+        #you may edit this to work for your data -- using the options Santiago's script specifies
+        singularity run --nv --bind $data_dir:/mnt \
+        designer2_${tag}.sif designer \
+        -normalize \
+        -denoise -shrinkage frob -adaptive_patch -rician \
+        -degibbs \
+        -eddy -rpe_pair /mnt/$rpe \
+        -mask -nocleanup \
+        -scratch /mnt/processing \
+        /mnt/$dwi1,/mnt/$dwi2 /mnt/dwi_designer.nii
+
+        singularity run --bind $data_dir:/mnt \
+        designer2_${tag}.sif tmi \
+        -DTI -DKI -WDKI -SMI \
+        -mask /mnt/processing/brain_mask.nii -sigma /mnt/processing/sigma.nii \
+        -fit_constraints 0,0,0 -akc_outliers -fit_smoothing 10 \
+        /mnt/dwi_designer.nii /mnt/params
+    fi
+    
+done

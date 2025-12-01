@@ -17,3 +17,20 @@ SMI maps will be computed using the full protocol. Note this is a white matter (
 
 Running designer:
 - try the bash script 'dwi_processing_example.sh' which contains how to call designer2 and tmi using docker. Note we are using designer2:v2.0.15
+
+=====================
+
+Running designer on bigpurple/ultraviolet:
+- Please refer to http://bigpurple-ws.nyumc.org/wiki/index.php/BigPurple_HPC_Cluster 
+- designer_sing_cuda.batch is submitted to slurm job-scheduler
+- 'designer_wrapper.sh' is a wrapper for submitting 'designer_sing_cuda.batch' to run in parallel
+- 'designer_wrapper.sh' contains comments with steps to follow to get started
+- Note that you'll need to adjust 'designer_wrapper.sh' and 'designer_sing_cuda.batch' for your data and directory
+- Also note in designer_sing_cuda.batch, you may have to adjust the designer and tmi options to follow 'dwi_processing_example.sh'
+- Storage space in ultraviolet may be limiting, so it might be convenient to request a labspace in ultraviolet
+
+=====================
+
+QC
+- 'html_maps.py' can be run to create an html file with maps from all subjects
+- It will save png files with plots of each parameter map for each subject and an html file for each parameter (eg f_smi.html, Da_smi.html, fa_dki.html, etc.)
