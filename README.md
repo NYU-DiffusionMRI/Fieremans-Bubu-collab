@@ -10,6 +10,7 @@ The current protocol contains the following data:
 - (iii) TE = 98ms; b=0(5), 500(6), 1000(12), 2000(48) [s/mm^2]
 
 DTI & DKI maps will be computed for (i,ii,ii). The higher quality ones will be (iii) so use those for your analysis.
+
 SMI maps will be computed using the full protocol. Note this is a white matter (WM) model so focus on WM regions of interest only.
 
 Running designer:
